@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useId } from "react";
+import React, { useState, useEffect, useId } from "react";
 import PageContainer from "@/components/layout/page-container";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
@@ -57,6 +57,8 @@ const INITIAL_PROFILE: ProfileFormData = {
   smsAlerts: false,
 };
 
+const PROFILE_STORAGE_KEY = "kartify_user_profile_v2";
+
 export default function ProfilePage() {
   const { showToast } = useCart();
   const bioId = useId();
@@ -66,6 +68,20 @@ export default function ProfilePage() {
   const [touched, setTouched] = useState<TouchedFields>({});
   const [isSuccessBannerVisible, setIsSuccessBannerVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "security" | "notifications">("general");
+
+  // Hydrate profile from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setFormData(parsed);
+        setSavedData(parsed);
+      }
+    } catch (err) {
+      console.error("Failed to load profile from localStorage", err);
+    }
+  }, []);
 
   // Real-time validation logic
   const validate = (data: ProfileFormData): FormErrors => {
@@ -144,8 +160,13 @@ export default function ProfilePage() {
     }
 
     setSavedData(formData);
+    try {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(formData));
+    } catch (err) {
+      console.error("Failed to save profile to localStorage", err);
+    }
     setIsSuccessBannerVisible(true);
-    showToast("Profile information updated successfully!", "success");
+    showToast("Profile information updated and saved locally!", "success");
   };
 
   const handleReset = () => {

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import PageContainer from "@/components/layout/page-container";
 import ProductCard from "@/components/products/product-card";
-import { getFeaturedProducts } from "@/lib/data/products";
+import { apiClient } from "@/lib/api/client";
 import {
   ArrowRight,
   Sparkles,
@@ -13,8 +13,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-export default function HomePage() {
-  const featuredProducts = getFeaturedProducts();
+export default async function HomePage() {
+  const featuredProducts = await apiClient.getFeaturedProducts(4);
 
   const features = [
     {

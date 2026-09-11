@@ -1,10 +1,4 @@
-export type ProductCategory =
-  | "All"
-  | "Audio"
-  | "Wearables"
-  | "Accessories"
-  | "Computers"
-  | "Photography";
+export type ProductCategory = string;
 
 export interface ProductSpec {
   name: string;
@@ -15,7 +9,7 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
-  category: "Audio" | "Wearables" | "Accessories" | "Computers" | "Photography";
+  category: string;
   price: number;
   originalPrice?: number;
   rating: number;

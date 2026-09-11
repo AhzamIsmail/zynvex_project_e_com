@@ -53,6 +53,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (saved) {
         setItems(JSON.parse(saved));
       }
+      const savedPromo = localStorage.getItem("kartify_applied_promo_v2");
+      if (savedPromo) {
+        setAppliedPromo(savedPromo);
+      }
     } catch (e) {
       console.error("Failed to load cart from localStorage", e);
     } finally {
@@ -65,11 +69,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (isHydrated) {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+        if (appliedPromo) {
+          localStorage.setItem("kartify_applied_promo_v2", appliedPromo);
+        } else {
+          localStorage.removeItem("kartify_applied_promo_v2");
+        }
       } catch (e) {
         console.error("Failed to save cart to localStorage", e);
       }
     }
-  }, [items, isHydrated]);
+  }, [items, appliedPromo, isHydrated]);
 
   const showToast = (message: string, type: "success" | "info" | "warning" = "success") => {
     const newToast = { id: Date.now().toString(), message, type };
