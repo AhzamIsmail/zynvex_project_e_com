@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
@@ -13,8 +13,15 @@ interface ProductCardProps {
   product: Product;
 }
 
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80";
+
 const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const { addItem, items } = useCart();
+  const [imgSrc, setImgSrc] = useState(product.image || FALLBACK_IMAGE);
+
+  useEffect(() => {
+    setImgSrc(product.image || FALLBACK_IMAGE);
+  }, [product.image]);
 
   const cartItem = items.find((item) => item.product.id === product.id);
   const inCartCount = cartItem?.quantity || 0;
@@ -40,13 +47,14 @@ const ProductCard = React.memo(function ProductCard({ product }: ProductCardProp
       <Link href={`/products/${product.id}`} className="flex-1 flex flex-col">
         {/* Product Image Container */}
         <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-          {/* Next.js Optimized Image */}
+          {/* Next.js Optimized Image with Fallback */}
           <Image
-            src={product.image}
+            src={imgSrc}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+            onError={() => setImgSrc(FALLBACK_IMAGE)}
           />
 
           {/* Top Floating Badges */}

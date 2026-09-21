@@ -49,6 +49,12 @@ export default function ProductDetailClient({
 
   const [quantity, setQuantity] = useState(1);
   const [addedAnimation, setAddedAnimation] = useState(false);
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80";
+  const [detailImg, setDetailImg] = useState(product?.image || FALLBACK_IMAGE);
+
+  useEffect(() => {
+    setDetailImg(product?.image || FALLBACK_IMAGE);
+  }, [product?.image]);
 
   // Track into recently viewed items when product is loaded
   useEffect(() => {
@@ -152,12 +158,13 @@ export default function ProductDetailClient({
         <div className="lg:col-span-6 space-y-4">
           <div className="relative aspect-square w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <Image
-              src={product.image}
+              src={detailImg}
               alt={product.name}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover object-center"
+              onError={() => setDetailImg(FALLBACK_IMAGE)}
             />
             <div className="absolute top-4 left-4 flex gap-2 z-10">
               <Badge variant="default" className="bg-white/95 font-semibold shadow-xs">
