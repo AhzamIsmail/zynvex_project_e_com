@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Product } from "@/types/product";
 
 interface RecentlyViewedContextType {
@@ -29,8 +29,8 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
           setRecentlyViewed(parsed.slice(0, MAX_ITEMS));
         }
       }
-    } catch (err) {
-      console.error("Failed to parse recently viewed items from localStorage", err);
+    } catch {
+      // Ignore localStorage read errors
     } finally {
       setIsHydrated(true);
     }
@@ -41,13 +41,13 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
     if (isHydrated) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(recentlyViewed));
-      } catch (err) {
-        console.error("Failed to persist recently viewed items to localStorage", err);
+      } catch {
+        // Ignore localStorage write errors
       }
     }
   }, [recentlyViewed, isHydrated]);
 
-  const addRecentlyViewed = (product: Product) => {
+  const addRecentlyViewed = useCallback((product: Product) => {
     if (!product || !product.id) return;
 
     setRecentlyViewed((prev) => {
@@ -56,16 +56,16 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
       // Prepend the new product to the front and cap at MAX_ITEMS (5)
       return [product, ...filtered].slice(0, MAX_ITEMS);
     });
-  };
+  }, []);
 
-  const clearRecentlyViewed = () => {
+  const clearRecentlyViewed = useCallback(() => {
     setRecentlyViewed([]);
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch (err) {
-      console.error("Failed to clear recently viewed from localStorage", err);
+    } catch {
+      // Ignore localStorage remove errors
     }
-  };
+  }, []);
 
   return (
     <RecentlyViewedContext.Provider

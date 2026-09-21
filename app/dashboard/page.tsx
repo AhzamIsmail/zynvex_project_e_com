@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/layout/sidebar";
 import Button from "@/components/ui/button";
 import Card from "@/components/ui/card";
 import Badge from "@/components/ui/badge";
-import Input from "@/components/ui/input";
-import Modal from "@/components/ui/modal";
+
+const Modal = dynamic(() => import("@/components/ui/modal"), {
+  ssr: false,
+});
+
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -18,14 +22,35 @@ import {
   Sparkles,
   ArrowRight,
   ShoppingCart,
-  User,
+  Download,
+  FileSpreadsheet,
+  CheckCircle2,
 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 
 export default function DashboardPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const { totalCount } = useCart();
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+  const { totalCount, showToast } = useCart();
+
+  const handleOpenExport = useCallback(() => {
+    setExported(false);
+    setIsExportModalOpen(true);
+  }, []);
+
+  const handleCloseExport = useCallback(() => {
+    setIsExportModalOpen(false);
+  }, []);
+
+  const handleTriggerExport = useCallback(() => {
+    setIsExporting(true);
+    setTimeout(() => {
+      setIsExporting(false);
+      setExported(true);
+      showToast("Sales report generated and ready for download.", "success");
+    }, 1200);
+  }, [showToast]);
 
   const stats = [
     {
@@ -188,61 +213,107 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Primitive Control Center Card */}
+          {/* Store Operations & Quick Actions Card */}
           <div>
-            <Card title="UI Component Showcase" description="Test primitive styles and interactive modals.">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Button Primitives</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" size="sm">Primary</Button>
-                    <Button variant="secondary" size="sm">Secondary</Button>
-                    <Button variant="outline" size="sm">Outline</Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Input Primitive</h4>
-                  <Input
-                    label="Username"
-                    placeholder="Enter username..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                  />
-                  {inputValue && (
-                    <p className="text-[10px] text-slate-500">Live output: <strong>{inputValue}</strong></p>
-                  )}
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Modal Primitive Trigger</h4>
-                  <Button variant="primary" className="w-full" onClick={() => setIsModalOpen(true)}>
-                    Launch Demo Modal
+            <Card
+              title="Store Operations"
+              description="Administrative actions and inventory reporting."
+            >
+              <div className="space-y-5">
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Quick Export
+                  </h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Generate an audit summary of active inventory, customer volumes, and net store revenue.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full gap-2 shadow-xs"
+                    onClick={handleOpenExport}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>Export Sales Report</span>
                   </Button>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Category Inventory
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-50">
+                      <span className="font-medium text-slate-700">Audio Equipment</span>
+                      <Badge variant="success">18 in stock</Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-slate-50">
+                      <span className="font-medium text-slate-700">Wearables & Watches</span>
+                      <Badge variant="success">12 in stock</Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-1">
+                      <span className="font-medium text-slate-700">Smart Accessories</span>
+                      <Badge variant="success">24 in stock</Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
           </div>
         </div>
 
-        {/* Modal component implementation */}
+        {/* Export Sales Report Modal */}
         <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Component Library Modal"
+          isOpen={isExportModalOpen}
+          onClose={handleCloseExport}
+          title="Export Sales & Inventory Summary"
         >
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-3 rounded-lg text-sm">
-              <Sparkles className="h-5 w-5 flex-shrink-0" />
-              <span>Modal overlay mounted, background scrolling is locked!</span>
-            </div>
-            <p className="text-slate-600 text-sm">
-              This modal represents our UI primitive configured with standard HTML headers, body containers, custom transition indicators, and layout controllers.
-            </p>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => setIsModalOpen(false)}>Acknowledge</Button>
-            </div>
+            {exported ? (
+              <div className="text-center py-4 space-y-3">
+                <div className="h-12 w-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="h-7 w-7" />
+                </div>
+                <h4 className="font-bold text-slate-900 text-base">Export File Ready</h4>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                  kartify_sales_report_2026.csv has been prepared with 4 recent orders and full SKU stock records.
+                </p>
+                <div className="flex justify-center pt-2">
+                  <Button variant="primary" size="sm" onClick={handleCloseExport}>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-xs text-slate-700">
+                  <FileSpreadsheet className="h-5 w-5 text-brand-600 flex-shrink-0" />
+                  <span>
+                    This report includes total gross revenue ($45,231.89), customer metrics, and line-item order details.
+                  </span>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="secondary" onClick={handleCloseExport}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleTriggerExport}
+                    disabled={isExporting}
+                    className="gap-2"
+                  >
+                    {isExporting ? (
+                      <span>Generating Report...</span>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        <span>Download CSV</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
       </main>

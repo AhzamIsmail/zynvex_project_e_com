@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { CartItem } from "@/types/product";
 import { useCart } from "@/context/cart-context";
 import { Trash2, Minus, Plus } from "lucide-react";
@@ -10,7 +11,7 @@ interface CartItemRowProps {
   item: CartItem;
 }
 
-export default function CartItemRow({ item }: CartItemRowProps) {
+const CartItemRow = React.memo(function CartItemRow({ item }: CartItemRowProps) {
   const { updateQuantity, removeItem } = useCart();
   const { product, quantity } = item;
 
@@ -22,10 +23,12 @@ export default function CartItemRow({ item }: CartItemRowProps) {
           href={`/products/${product.id}`}
           className="relative h-20 w-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 group"
         >
-          <img
+          <Image
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform"
+            fill
+            sizes="80px"
+            className="object-cover object-center group-hover:scale-105 transition-transform"
           />
         </Link>
 
@@ -97,4 +100,6 @@ export default function CartItemRow({ item }: CartItemRowProps) {
       </div>
     </div>
   );
-}
+});
+
+export default CartItemRow;

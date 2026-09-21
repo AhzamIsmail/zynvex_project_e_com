@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { Product, CartItem } from "@/types/product";
 
 interface ToastNotification {
@@ -57,8 +57,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (savedPromo) {
         setAppliedPromo(savedPromo);
       }
-    } catch (e) {
-      console.error("Failed to load cart from localStorage", e);
+    } catch {
+      // Ignore localStorage read errors in non-browser or restricted environments
     } finally {
       setIsHydrated(true);
     }
@@ -74,13 +74,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         } else {
           localStorage.removeItem("kartify_applied_promo_v2");
         }
-      } catch (e) {
-        console.error("Failed to save cart to localStorage", e);
+      } catch {
+        // Ignore localStorage quota or write errors
       }
     }
   }, [items, appliedPromo, isHydrated]);
 
-  const showToast = (message: string, type: "success" | "info" | "warning" = "success") => {
+  const showToast = useCallback((message: string, type: "success" | "info" | "warning" = "success") => {
     const newToast = { id: Date.now().toString(), message, type };
     setToast(newToast);
 
@@ -88,13 +88,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setToast((current) => (current?.id === newToast.id ? null : current));
     }, 3500);
-  };
+  }, []);
 
-  const dismissToast = () => setToast(null);
+  const dismissToast = useCallback(() => setToast(null), []);
 
-  const addItem = (product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, quantity = 1) => {
     if (quantity <= 0) return;
-    
+
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
@@ -111,17 +111,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     showToast(`Added "${product.name}" to your cart!`, "success");
-  };
+  }, [showToast]);
 
-  const removeItem = (productId: string) => {
-    const itemToRemove = items.find((item) => item.product.id === productId);
-    setItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
-    if (itemToRemove) {
-      showToast(`Removed "${itemToRemove.product.name}" from cart.`, "info");
-    }
-  };
+  const removeItem = useCallback((productId: string) => {
+    setItems((prevItems) => {
+      const itemToRemove = prevItems.find((item) => item.product.id === productId);
+      if (itemToRemove) {
+        showToast(`Removed "${itemToRemove.product.name}" from cart.`, "info");
+      }
+      return prevItems.filter((item) => item.product.id !== productId);
+    });
+  }, [showToast]);
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(productId);
       return;
@@ -132,15 +134,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         item.product.id === productId ? { ...item, quantity } : item
       )
     );
-  };
+  }, [removeItem]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([]);
     setAppliedPromo(null);
     showToast("Cart cleared.", "info");
-  };
+  }, [showToast]);
 
-  const applyPromoCode = (code: string) => {
+  const applyPromoCode = useCallback((code: string) => {
     const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) {
       return { success: false, message: "Please enter a promo code." };
@@ -154,32 +156,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { success: false, message: "Invalid promo code. Try SAVE10 or ZYNVEX20" };
-  };
+  }, [showToast]);
 
-  const removePromoCode = () => {
+  const removePromoCode = useCallback(() => {
     setAppliedPromo(null);
     showToast("Promo code removed.", "info");
-  };
+  }, [showToast]);
 
-  // Calculations
-  const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  // Calculations memoized for performance
+  const { totalCount, subtotal, discount, tax, shipping, totalPrice } = useMemo(() => {
+    const count = items.reduce((sum, item) => sum + item.quantity, 0);
+    const sub = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  const activePromoConfig = appliedPromo ? PROMO_CODES[appliedPromo] : null;
+    const activePromoConfig = appliedPromo ? PROMO_CODES[appliedPromo] : null;
 
-  let discount = 0;
-  if (activePromoConfig?.discountPercent) {
-    discount = (subtotal * activePromoConfig.discountPercent) / 100;
-  } else if (activePromoConfig?.fixedDiscount) {
-    discount = Math.min(subtotal, activePromoConfig.fixedDiscount);
-  }
+    let disc = 0;
+    if (activePromoConfig?.discountPercent) {
+      disc = (sub * activePromoConfig.discountPercent) / 100;
+    } else if (activePromoConfig?.fixedDiscount) {
+      disc = Math.min(sub, activePromoConfig.fixedDiscount);
+    }
 
-  const tax = (subtotal - discount) > 0 ? (subtotal - discount) * 0.08 : 0;
-  
-  const isFreeShipping = subtotal === 0 || subtotal >= 100 || activePromoConfig?.freeShipping;
-  const shipping = subtotal === 0 ? 0 : isFreeShipping ? 0 : 9.99;
+    const calculatedTax = sub - disc > 0 ? (sub - disc) * 0.08 : 0;
+    const freeShipping = sub === 0 || sub >= 100 || activePromoConfig?.freeShipping;
+    const ship = sub === 0 ? 0 : freeShipping ? 0 : 9.99;
+    const total = Math.max(0, sub - disc + calculatedTax + ship);
 
-  const totalPrice = Math.max(0, subtotal - discount + tax + shipping);
+    return {
+      totalCount: count,
+      subtotal: sub,
+      discount: disc,
+      tax: calculatedTax,
+      shipping: ship,
+      totalPrice: total,
+    };
+  }, [items, appliedPromo]);
 
   return (
     <CartContext.Provider

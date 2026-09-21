@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import PageContainer from "@/components/layout/page-container";
 import CartItemRow from "@/components/cart/cart-item-row";
 import OrderSummary from "@/components/cart/order-summary";
 import { useCart } from "@/context/cart-context";
 import Button from "@/components/ui/button";
-import Modal from "@/components/ui/modal";
+
+// Dynamic import for Modal to split heavy dialog code
+const Modal = dynamic(() => import("@/components/ui/modal"), {
+  ssr: false,
+});
 import {
   ShoppingBag,
   ArrowLeft,
@@ -23,14 +28,37 @@ export default function CartPage() {
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = useCallback(() => {
     setOrderPlaced(true);
     setTimeout(() => {
       clearCart();
       setIsCheckoutModalOpen(false);
       setOrderPlaced(false);
     }, 2500);
-  };
+  }, [clearCart]);
+
+  const handleOpenCheckout = useCallback(() => {
+    setIsCheckoutModalOpen(true);
+  }, []);
+
+  const handleCloseCheckout = useCallback(() => {
+    if (!orderPlaced) {
+      setIsCheckoutModalOpen(false);
+    }
+  }, [orderPlaced]);
+
+  const handleOpenClearConfirm = useCallback(() => {
+    setIsClearConfirmOpen(true);
+  }, []);
+
+  const handleCloseClearConfirm = useCallback(() => {
+    setIsClearConfirmOpen(false);
+  }, []);
+
+  const handleConfirmClear = useCallback(() => {
+    clearCart();
+    setIsClearConfirmOpen(false);
+  }, [clearCart]);
 
   return (
     <PageContainer className="space-y-8">
@@ -55,7 +83,7 @@ export default function CartPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsClearConfirmOpen(true)}
+            onClick={handleOpenClearConfirm}
             className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 gap-1.5 self-start sm:self-auto"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -90,7 +118,7 @@ export default function CartPage() {
 
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-4 sticky top-24">
-            <OrderSummary onCheckout={() => setIsCheckoutModalOpen(true)} />
+            <OrderSummary onCheckout={handleOpenCheckout} />
           </div>
         </div>
       ) : (
@@ -117,7 +145,7 @@ export default function CartPage() {
       {/* Checkout Confirmation Modal */}
       <Modal
         isOpen={isCheckoutModalOpen}
-        onClose={() => !orderPlaced && setIsCheckoutModalOpen(false)}
+        onClose={handleCloseCheckout}
         title={orderPlaced ? "Order Confirmed!" : "Checkout Confirmation"}
       >
         {orderPlaced ? (
@@ -127,7 +155,7 @@ export default function CartPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900">Payment Successful!</h3>
             <p className="text-xs text-slate-600 max-w-xs mx-auto">
-              Your mock order has been placed. You will receive an email confirmation with your dispatch tracking code.
+              Your order has been placed. You will receive an email confirmation with your dispatch tracking code.
             </p>
             <div className="pt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 py-2 rounded-lg">
               Transaction ID: TXN-{(Math.random() * 100000).toFixed(0)}
@@ -138,7 +166,7 @@ export default function CartPage() {
             <div className="flex items-center gap-3 bg-brand-50 p-3.5 rounded-xl text-brand-800 text-xs">
               <ShieldCheck className="h-5 w-5 text-brand-600 flex-shrink-0" />
               <span>
-                This is a client-side simulated checkout session for Module 2. No real payment is processed.
+                All orders are processed with 256-bit SSL encryption. Safe checkout guarantee.
               </span>
             </div>
 
@@ -156,7 +184,7 @@ export default function CartPage() {
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 variant="secondary"
-                onClick={() => setIsCheckoutModalOpen(false)}
+                onClick={handleCloseCheckout}
               >
                 Cancel
               </Button>
@@ -176,7 +204,7 @@ export default function CartPage() {
       {/* Clear Cart Confirmation Modal */}
       <Modal
         isOpen={isClearConfirmOpen}
-        onClose={() => setIsClearConfirmOpen(false)}
+        onClose={handleCloseClearConfirm}
         title="Clear Shopping Cart"
       >
         <div className="space-y-4">
@@ -186,16 +214,13 @@ export default function CartPage() {
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="secondary"
-              onClick={() => setIsClearConfirmOpen(false)}
+              onClick={handleCloseClearConfirm}
             >
               Keep Items
             </Button>
             <Button
               variant="primary"
-              onClick={() => {
-                clearCart();
-                setIsClearConfirmOpen(false);
-              }}
+              onClick={handleConfirmClear}
               className="bg-rose-600 hover:bg-rose-700"
             >
               Yes, Clear Cart

@@ -13,7 +13,8 @@ export default function Input({
   id,
   ...props
 }: InputProps) {
-  const inputId = id || React.useId();
+  const defaultId = React.useId();
+  const inputId = id || defaultId;
 
   return (
     <div className="flex flex-col gap-1.5 w-full">

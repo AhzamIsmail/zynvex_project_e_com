@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/components/layout/page-container";
 import { Product } from "@/types/product";
@@ -56,6 +57,33 @@ export default function ProductDetailClient({
     }
   }, [product, addRecentlyViewed]);
 
+  const inCartItem = items.find((item) => item.product.id === product?.id);
+  const currentInCartQty = inCartItem?.quantity || 0;
+
+  const discountPercent =
+    product?.originalPrice && product.originalPrice > product.price
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : null;
+
+  const handleAddToCart = useCallback(() => {
+    if (!product || !product.inStock) return;
+    addItem(product, quantity);
+    setAddedAnimation(true);
+    setTimeout(() => setAddedAnimation(false), 1500);
+  }, [product, quantity, addItem]);
+
+  const handleBuyNow = useCallback(() => {
+    if (!product || !product.inStock) return;
+    addItem(product, quantity);
+    router.push("/cart");
+  }, [product, quantity, addItem, router]);
+
+  // Recently viewed excluding the current product
+  const otherRecentlyViewed = useMemo(
+    () => recentlyViewed.filter((item) => item.id !== product?.id),
+    [recentlyViewed, product?.id]
+  );
+
   // Loading skeleton
   if (isLoading && !product) {
     return (
@@ -103,30 +131,6 @@ export default function ProductDetailClient({
     );
   }
 
-  const inCartItem = items.find((item) => item.product.id === product.id);
-  const currentInCartQty = inCartItem?.quantity || 0;
-
-  const discountPercent =
-    product.originalPrice && product.originalPrice > product.price
-      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-      : null;
-
-  const handleAddToCart = () => {
-    if (!product.inStock) return;
-    addItem(product, quantity);
-    setAddedAnimation(true);
-    setTimeout(() => setAddedAnimation(false), 1500);
-  };
-
-  const handleBuyNow = () => {
-    if (!product.inStock) return;
-    addItem(product, quantity);
-    router.push("/cart");
-  };
-
-  // Recently viewed excluding the current product
-  const otherRecentlyViewed = recentlyViewed.filter((item) => item.id !== product.id);
-
   return (
     <PageContainer className="space-y-12">
       {/* Breadcrumbs navigation */}
@@ -147,12 +151,15 @@ export default function ProductDetailClient({
         {/* Left Column: Product Image Gallery */}
         <div className="lg:col-span-6 space-y-4">
           <div className="relative aspect-square w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <img
+            <Image
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover object-center"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover object-center"
             />
-            <div className="absolute top-4 left-4 flex gap-2">
+            <div className="absolute top-4 left-4 flex gap-2 z-10">
               <Badge variant="default" className="bg-white/95 font-semibold shadow-xs">
                 {product.category}
               </Badge>

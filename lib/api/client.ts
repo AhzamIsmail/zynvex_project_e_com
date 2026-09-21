@@ -114,8 +114,7 @@ export const apiClient = {
       const rawCategories: string[] = await res.json();
       const formatted = rawCategories.map((c) => formatCategoryName(c));
       return ["All", ...formatted];
-    } catch (error) {
-      console.warn("API getCategories failed, using fallback categories:", error);
+    } catch {
       return ["All", "Beauty", "Fragrances", "Furniture", "Groceries", "Laptops", "Mens Watches", "Smartphones"];
     }
   },
@@ -201,8 +200,8 @@ export const apiClient = {
           const item = await res.json();
           return mapDummyJsonToProduct(item);
         }
-      } catch (err) {
-        console.warn(`Failed fetching product ${id} from API, checking fallback:`, err);
+      } catch {
+        // Fallback to local mock products
       }
     }
 
@@ -223,8 +222,7 @@ export const apiClient = {
       const all = await this.getProducts({ limit: 30 });
       const featured = all.filter((p) => p.isFeatured);
       return featured.slice(0, limit);
-    } catch (err) {
-      console.warn("Failed fetching featured products from API, using fallback:", err);
+    } catch {
       return MOCK_PRODUCTS.filter((p) => p.isFeatured).slice(0, limit);
     }
   },

@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import PageContainer from "@/components/layout/page-container";
 import { apiClient } from "@/lib/api/client";
 import ProductDetailClient from "@/components/products/product-detail-client";
@@ -9,6 +10,26 @@ export const revalidate = 60;
 
 interface ProductDetailPageProps {
   params: { id: string };
+}
+
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+  const product = params?.id ? await apiClient.getProductById(params.id) : null;
+  if (!product) {
+    return {
+      title: "Product Details",
+      description: "Explore product specifications, warranty, and customer reviews.",
+    };
+  }
+
+  return {
+    title: product.name,
+    description: product.shortDescription || product.description.slice(0, 160),
+    openGraph: {
+      title: `${product.name} | Kartify Store`,
+      description: product.shortDescription,
+      images: product.image ? [{ url: product.image }] : [],
+    },
+  };
 }
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {

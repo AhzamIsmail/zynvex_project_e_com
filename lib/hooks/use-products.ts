@@ -26,7 +26,11 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     initialProducts,
     initialCategories,
     autoFetch = true,
-    ...fetchOptions
+    search,
+    category,
+    sort,
+    inStockOnly,
+    limit,
   } = options;
 
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
@@ -40,9 +44,9 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
 
     try {
       const [fetchedProducts, fetchedCategories] = await Promise.all([
-        apiClient.getProducts(fetchOptions),
-        categories.length > 1 && initialCategories
-          ? Promise.resolve(categories)
+        apiClient.getProducts({ search, category, sort, inStockOnly, limit }),
+        initialCategories && initialCategories.length > 1
+          ? Promise.resolve(initialCategories)
           : apiClient.getCategories(),
       ]);
 
@@ -51,14 +55,13 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
         setCategories(fetchedCategories);
       }
     } catch (err: any) {
-      console.error("useProducts: failed to fetch products:", err);
       setError(
         err?.message || "Unable to retrieve products. Please check your connection and try again."
       );
     } finally {
       setIsLoading(false);
     }
-  }, [fetchOptions.search, fetchOptions.category, fetchOptions.sort, fetchOptions.inStockOnly]);
+  }, [search, category, sort, inStockOnly, limit, initialCategories]);
 
   useEffect(() => {
     // If no initial products provided or if autoFetch is forced, fetch on mount
@@ -103,7 +106,6 @@ export function useProduct(id: string, initialProduct?: Product | null): UseProd
       const data = await apiClient.getProductById(id);
       setProduct(data);
     } catch (err: any) {
-      console.error(`useProduct: failed to fetch product ${id}:`, err);
       setError(err?.message || "Failed to load product details.");
     } finally {
       setIsLoading(false);

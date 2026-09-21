@@ -81,33 +81,45 @@ export default function ProductsClient({
   );
 
   // Handle filter changes
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-    updateUrlParams(query, selectedCategory, sortBy, inStockOnly);
-  };
+  const handleSearchChange = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      updateUrlParams(query, selectedCategory, sortBy, inStockOnly);
+    },
+    [updateUrlParams, selectedCategory, sortBy, inStockOnly]
+  );
 
-  const handleCategoryChange = (cat: ProductCategory) => {
-    setSelectedCategory(cat);
-    updateUrlParams(searchQuery, cat, sortBy, inStockOnly);
-  };
+  const handleCategoryChange = useCallback(
+    (cat: ProductCategory) => {
+      setSelectedCategory(cat);
+      updateUrlParams(searchQuery, cat, sortBy, inStockOnly);
+    },
+    [updateUrlParams, searchQuery, sortBy, inStockOnly]
+  );
 
-  const handleSortChange = (sort: SortOption) => {
-    setSortBy(sort);
-    updateUrlParams(searchQuery, selectedCategory, sort, inStockOnly);
-  };
+  const handleSortChange = useCallback(
+    (sort: SortOption) => {
+      setSortBy(sort);
+      updateUrlParams(searchQuery, selectedCategory, sort, inStockOnly);
+    },
+    [updateUrlParams, searchQuery, selectedCategory, inStockOnly]
+  );
 
-  const handleInStockChange = (inStock: boolean) => {
-    setInStockOnly(inStock);
-    updateUrlParams(searchQuery, selectedCategory, sortBy, inStock);
-  };
+  const handleInStockChange = useCallback(
+    (inStock: boolean) => {
+      setInStockOnly(inStock);
+      updateUrlParams(searchQuery, selectedCategory, sortBy, inStock);
+    },
+    [updateUrlParams, searchQuery, selectedCategory, sortBy]
+  );
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedCategory("All");
     setSortBy("featured");
     setInStockOnly(false);
     router.replace(pathname, { scroll: false });
-  };
+  }, [pathname, router]);
 
   // Combine search, category, in-stock, and sort filters on live data
   const filteredProducts = useMemo(() => {

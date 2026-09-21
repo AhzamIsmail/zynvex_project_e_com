@@ -78,8 +78,8 @@ export default function ProfilePage() {
         setFormData(parsed);
         setSavedData(parsed);
       }
-    } catch (err) {
-      console.error("Failed to load profile from localStorage", err);
+    } catch {
+      // Ignore localStorage read errors
     }
   }, []);
 
@@ -162,8 +162,8 @@ export default function ProfilePage() {
     setSavedData(formData);
     try {
       localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(formData));
-    } catch (err) {
-      console.error("Failed to save profile to localStorage", err);
+    } catch {
+      // Ignore localStorage write errors
     }
     setIsSuccessBannerVisible(true);
     showToast("Profile information updated and saved locally!", "success");

@@ -1,8 +1,14 @@
 import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import PageContainer from "@/components/layout/page-container";
 import { apiClient } from "@/lib/api/client";
 import ProductsClient from "@/components/products/products-client";
 import { ProductCardSkeleton } from "@/components/ui/skeleton";
+
+export const metadata: Metadata = {
+  title: "Explore Products",
+  description: "Browse our dynamic catalog of premium electronics, audio gear, and cutting-edge wearables with live stock availability.",
+};
 
 export const revalidate = 60;
 

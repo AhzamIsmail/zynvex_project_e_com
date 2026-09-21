@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Product } from "@/types/product";
 import { useCart } from "@/context/cart-context";
 import Badge from "@/components/ui/badge";
@@ -12,19 +13,22 @@ interface ProductCardProps {
   product: Product;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const { addItem, items } = useCart();
 
   const cartItem = items.find((item) => item.product.id === product.id);
   const inCartCount = cartItem?.quantity || 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (product.inStock) {
-      addItem(product, 1);
-    }
-  };
+  const handleAddToCart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (product.inStock) {
+        addItem(product, 1);
+      }
+    },
+    [addItem, product]
+  );
 
   const discountPercent =
     product.originalPrice && product.originalPrice > product.price
@@ -36,12 +40,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.id}`} className="flex-1 flex flex-col">
         {/* Product Image Container */}
         <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-          {/* Fallback pattern + Image */}
-          <img
+          {/* Next.js Optimized Image */}
+          <Image
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
           />
 
           {/* Top Floating Badges */}
@@ -132,4 +137,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
     </div>
   );
-}
+});
+
+export default ProductCard;

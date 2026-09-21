@@ -19,7 +19,7 @@ interface ProductFiltersProps {
   totalResults: number;
 }
 
-export default function ProductFilters({
+const ProductFilters = React.memo(function ProductFilters({
   categories,
   selectedCategory,
   onCategoryChange,
@@ -134,4 +134,6 @@ export default function ProductFilters({
       </div>
     </div>
   );
-}
+});
+
+export default ProductFilters;

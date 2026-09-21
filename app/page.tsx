@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import PageContainer from "@/components/layout/page-container";
 import ProductCard from "@/components/products/product-card";
@@ -13,25 +14,30 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+export const metadata: Metadata = {
+  title: "Kartify - Modern E-Commerce Flagship Store & Dashboard",
+  description: "Explore premium audio gear, smart wearables, and cutting-edge tech essentials with instant cart sync and live operations analytics.",
+};
+
 export default async function HomePage() {
   const featuredProducts = await apiClient.getFeaturedProducts(4);
 
   const features = [
     {
-      title: "Client-Side Routing",
-      description: "Fluid transitions between Catalog, Product Details, Cart, and Profile without full page reloads.",
+      title: "Fast & Reliable Delivery",
+      description: "Swift order dispatch with real-time tracking and free express shipping on qualifying orders.",
       icon: Zap,
       color: "bg-blue-50 text-blue-600",
     },
     {
-      title: "Interactive Cart State",
-      description: "Universal state management with persistent storage, dynamic navbar badges, and coupon engine.",
+      title: "Seamless Shopping Experience",
+      description: "Persistent cart state, instant coupon code discounts, and frictionless checkout across all devices.",
       icon: ShoppingBag,
       color: "bg-purple-50 text-purple-600",
     },
     {
-      title: "Real-Time Validation",
-      description: "Instant feedback forms with regex pattern checking, touched states, and error messaging.",
+      title: "100% Secure & Verified",
+      description: "256-bit encrypted checkout, comprehensive buyer protection, and 30-day hassle-free returns.",
       icon: Shield,
       color: "bg-emerald-50 text-emerald-600",
     },
@@ -41,15 +47,15 @@ export default async function HomePage() {
     <PageContainer className="space-y-16">
       {/* Hero Section */}
       <section className="py-12 md:py-18 flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold mb-6 animate-pulse border border-brand-200">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-bold mb-6 border border-brand-200 shadow-xs">
           <Sparkles className="h-3.5 w-3.5" />
-          Kartify Store & Dashboard v2.0
+          Premium Digital Flagship Store
         </div>
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 max-w-3xl leading-tight">
           Modern E-Commerce with <span className="text-brand-600">Fluid Experience</span>
         </h1>
         <p className="mt-6 text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
-          Explore dynamic product catalogs, seamless client-side routing, instant cart state synchronization, and real-time validated account management.
+          Discover handpicked electronics, premium audio gear, and cutting-edge wearables designed for speed, comfort, and uncompromising performance.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md">
           <Link
@@ -81,7 +87,7 @@ export default async function HomePage() {
               Popular in Store
             </h2>
             <p className="text-slate-500 text-xs sm:text-sm mt-1">
-              Click any product to inspect dynamic detail views, specifications, and test cart integrations.
+              Explore top-rated electronics with verified customer reviews and manufacturer warranties.
             </p>
           </div>
           <Link
@@ -104,10 +110,10 @@ export default async function HomePage() {
       <section id="features" className="border-t border-slate-200 pt-12 pb-6">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Module 2 Core Capabilities
+            Why Shop with Kartify
           </h2>
           <p className="mt-2 text-slate-600 text-xs md:text-sm">
-            Architected with modern Next.js client-side navigation, unified state management, and type-safe components.
+            Discover a modern shopping experience designed for premium quality, dependable delivery, and customer satisfaction.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
